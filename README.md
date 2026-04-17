@@ -49,3 +49,52 @@ seaborn 绘制前15条线路水平条形图，显示标准差。
 4. GitHub push 连接中断
 原因：网络波动或代理问题
 解决：更换网络或多次 push，本地 commit 已保存
+
+四.    人工代码审查（核心示例）
+##### #只统计上车刷卡记录
+board_df = df[df['刷卡类型'] == 0]
+
+##### #统计全天各小时刷卡量
+hour_counts = board_df.groupby('hour').size()
+
+##### #自动找出刷卡量最大的高峰小时
+peak_hour = hour_counts.idxmax()
+
+peak_hour_count = hour_counts.max()
+
+print(f"高峰小时：{peak_hour:02d}:00 ~ {peak_hour + 1:02d}:00，刷卡量：{peak_hour_count} 次")
+
+##### #取出该小时数据，并按时间排序
+peak_df = board_df[board_df['hour'] == peak_hour].copy()
+
+peak_df = peak_df.set_index('交易时间').sort_index()
+
+##### #5分钟粒度统计
+count_5min = peak_df.resample('5min').size()
+
+max_5 = count_5min.max()                    # 最大5分钟刷卡量
+
+max_5_start = count_5min.idxmax()          # 起始时间
+
+max_5_end = max_5_start + pd.Timedelta(minutes=5)
+
+PHF5 = peak_hour_count / (12 * max_5)      # PHF5公式
+
+print(f"最大5分钟刷卡量（{max_5_start.strftime('%H:%M')}~{max_5_end.strftime('%H:%M')}）：{max_5} 次")
+
+print(f"PHF5  = {PHF5:.4f}")
+
+##### #15分钟粒度统计
+count_15min = peak_df.resample('15min').size()
+
+max_15 = count_15min.max()
+
+max_15_start = count_15min.idxmax()
+
+max_15_end = max_15_start + pd.Timedelta(minutes=15)
+
+PHF15 = peak_hour_count / (4 * max_15)
+
+print(f"最大15分钟刷卡量（{max_15_start.strftime('%H:%M')}~{max_15_end.strftime('%H:%M')}）：{max_15} 次")
+
+print(f"PHF15 = {PHF15:.4f}")
