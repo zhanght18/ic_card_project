@@ -206,3 +206,58 @@ for route in target_routes:
 
     print(f"生成文件：{file_path}")
 
+# =========================
+# 任务6：服务绩效排名与热力图
+# =========================
+
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 只统计上车刷卡记录
+board_df = df[df['刷卡类型'] == 0]
+
+# Top10 统计
+top_driver = board_df['驾驶员编号'].value_counts().head(10)
+top_route = board_df['线路号'].value_counts().head(10)
+top_stop = board_df['上车站点'].value_counts().head(10)
+top_vehicle = board_df['车辆编号'].value_counts().head(10)
+
+print("Top10 司机：")
+print(top_driver)
+print("Top10 线路：")
+print(top_route)
+print("Top10 上车站点：")
+print(top_stop)
+print("Top10 车辆：")
+print(top_vehicle)
+
+# 构造热力图矩阵 4x10
+heatmap_data = np.array([
+    top_driver.values,
+    top_route.values,
+    top_stop.values,
+    top_vehicle.values
+])
+
+plt.figure(figsize=(12, 6))
+
+sns.heatmap(
+    heatmap_data,
+    annot=True,
+    fmt='d',
+    cmap='YlOrRd',
+    xticklabels=[f"Top{i}" for i in range(1, 11)],
+    yticklabels=['司机', '线路', '上车站点', '车辆']
+)
+
+plt.title("服务绩效热力图")
+plt.xlabel("Top1~Top10")
+plt.ylabel("维度")
+plt.xticks(rotation=0)
+
+plt.tight_layout()
+plt.savefig("performance_heatmap.png", dpi=150, bbox_inches='tight')
+plt.show()
+
+print("任务6完成")
