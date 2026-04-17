@@ -130,3 +130,46 @@ plt.xlim(left=0)
 plt.tight_layout()
 plt.savefig("route_stops.png", dpi=150)
 plt.show()
+
+# 任务4：高峰小时系数计算
+# =========================
+
+# 只统计上车刷卡记录
+board_df = df[df['刷卡类型'] == 0].copy()
+
+# 1. 统计全天各小时刷卡量，找出高峰小时
+hour_counts = board_df.groupby('hour').size()
+peak_hour = hour_counts.idxmax()
+peak_hour_count = hour_counts.max()
+
+print(f"高峰小时：{peak_hour:02d}:00 ~ {peak_hour + 1:02d}:00，刷卡量：{peak_hour_count} 次")
+
+# 2. 取出高峰小时内的数据
+peak_df = board_df[board_df['hour'] == peak_hour].copy()
+
+# 把交易时间设为索引，便于按时间窗口重采样
+peak_df = peak_df.set_index('交易时间').sort_index()
+
+# 3. 按5分钟粒度统计
+count_5min = peak_df.resample('5min').size()
+
+max_5 = count_5min.max()
+max_5_start = count_5min.idxmax()
+max_5_end = max_5_start + pd.Timedelta(minutes=5)
+
+PHF5 = peak_hour_count / (12 * max_5)
+
+print(f"最大5分钟刷卡量（{max_5_start.strftime('%H:%M')}~{max_5_end.strftime('%H:%M')}）：{max_5} 次")
+print(f"PHF5  = {peak_hour_count} / (12 × {max_5}) = {PHF5:.4f}")
+
+# 4. 按15分钟粒度统计
+count_15min = peak_df.resample('15min').size()
+
+max_15 = count_15min.max()
+max_15_start = count_15min.idxmax()
+max_15_end = max_15_start + pd.Timedelta(minutes=15)
+
+PHF15 = peak_hour_count / (4 * max_15)
+
+print(f"最大15分钟刷卡量（{max_15_start.strftime('%H:%M')}~{max_15_end.strftime('%H:%M')}）：{max_15} 次")
+print(f"PHF15 = {peak_hour_count} / ( 4 × {max_15}) = {PHF15:.4f}")
