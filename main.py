@@ -1,16 +1,39 @@
-# 这是一个示例 Python 脚本。
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 
-# 按 Ctrl+F5 执行或将其替换为您的代码。
-# 按 双击 Shift 在所有地方搜索类、文件、工具窗口、操作和设置。
+# 1. 读取数据（注意分隔符是\t）
+df = pd.read_csv('ICData.csv')
 
+# 查看前5行
+print(df.head())
 
-def print_hi(name):
-    # 在下面的代码行中使用断点来调试脚本。
-    print(f'Hi, {name}')  # 按 F9 切换断点。
+# 查看数据基本信息
+print(df.info())
 
+# 2. 时间解析：转换为 datetime 类型
+df['交易时间'] = pd.to_datetime(df['交易时间'])
 
-# 按装订区域中的绿色按钮以运行脚本。
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# 提取小时字段
+df['hour'] = df['交易时间'].dt.hour
 
-# 访问 https://www.jetbrains.com/help/pycharm/ 获取 PyCharm 帮助
+# 3. 构造“搭乘站点数”
+df['ride_stops'] = (df['下车站点'] - df['上车站点']).abs()
+
+# 删除 ride_stops 为 0 的异常数据
+before = len(df)
+df = df[df['ride_stops'] != 0]
+after = len(df)
+
+print("删除的异常记录数：", before - after)
+
+# 4. 缺失值检查
+print("缺失值统计：")
+print(df.isnull().sum())
+
+# 简单处理：删除缺失值
+df = df.dropna()
+
+print("数据预处理完成")
