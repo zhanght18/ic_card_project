@@ -173,3 +173,36 @@ PHF15 = peak_hour_count / (4 * max_15)
 
 print(f"最大15分钟刷卡量（{max_15_start.strftime('%H:%M')}~{max_15_end.strftime('%H:%M')}）：{max_15} 次")
 print(f"PHF15 = {peak_hour_count} / ( 4 × {max_15}) = {PHF15:.4f}")
+
+# 任务5：线路驾驶员信息批量导出
+# =========================
+
+import os
+
+# 目标线路
+target_routes = list(range(1101, 1121))
+
+# 创建文件夹
+folder_path = "线路驾驶员信息"
+os.makedirs(folder_path, exist_ok=True)
+
+# 筛选目标线路数据
+subset = df[df['线路号'].isin(target_routes)].copy()
+
+# 遍历每条线路
+for route in target_routes:
+    route_data = subset[subset['线路号'] == route]
+
+    # 车辆-驾驶员去重
+    pairs = route_data[['车辆编号', '驾驶员编号']].drop_duplicates()
+
+    # 写入文件
+    file_path = os.path.join(folder_path, f"{route}.txt")
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(f"线路号: {route}\n")
+        f.write("车辆编号\t驾驶员编号\n")
+        for _, row in pairs.iterrows():
+            f.write(f"{row['车辆编号']}\t{row['驾驶员编号']}\n")
+
+    print(f"生成文件：{file_path}")
+
